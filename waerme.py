@@ -123,7 +123,7 @@ if __name__ == "__main__":
         
         time_total.start()
         time_gradient.start()
-        prog.calc_gradient(queue, (width,height), None,  temperature_fields[0], gradient_field, numpy.array((width,height),dtype=numpy.int32))
+#        prog.calc_gradient(queue, (width,height), None,  temperature_fields[0], gradient_field, numpy.array((width,height),dtype=numpy.int32))
         time_gradient.stop()
         
         time_acquire.start()
