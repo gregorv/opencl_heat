@@ -4,6 +4,21 @@ int get_idx(int x, int y, int2 res)
 	return x*res.y + y;
 }
 
+float4 hsv2rgbA(float H, float S, float V, float a)
+{
+	int hi = (int)H/60.0f;
+	float f = H/60.0f - hi;
+	float p = V*(1.f-S);
+	float q = V*(1.f-S*f);
+	float t = V*(1.f-S*(1.f-f));
+	if(hi == 1) return (float4)(q,V,p,a);
+	else if(hi == 2) return (float4)(p,V,t,a);
+	else if(hi == 3) return (float4)(p,q,V,a);
+	else if(hi == 4) return (float4)(t,p,V,a);
+	else if(hi == 5) return (float4)(V,p,q,a);
+	return (float4)(V,t,p,a);
+}
+
 __kernel void calc_gradient(__global float* skalarField, __global float2* gradientField, int2 res)
 {
 	int x = get_global_id(0);
@@ -25,7 +40,7 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 	int y = get_global_id(1);
 	int xp = x>=resolution.x-1? x : x+1;
 	int xm = x<=0? x : x-1;
-	int yp = y>=resolution.y? y : y+1;
+	int yp = y>=resolution.y-1? y : y+1;
 	int ym = y<=0? y : y-1;
 	float T = iTemperature[x * resolution.y + y];
 	float Txp = iTemperature[xp * resolution.y + y];
@@ -37,8 +52,9 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 	oTemperature[x*resolution.y + y] = iTemperature[x*resolution.y + y] + div*0.00001f;
 	if(oTemperature[x*resolution.y + y] < 0.0f)
 		oTemperature[x*resolution.y + y] = 0.0f;
-	write_imagef(dest, (int2)(x,y), (float4)(oTemperature[x*resolution.y + y]*1e-3f, -oTemperature[x*resolution.y + y]*1e-3f, 0.0f, 1.0f));
+	//write_imagef(dest, (int2)(x,y), (float4)(oTemperature[x*resolution.y + y]*1e-3f, -oTemperature[x*resolution.y + y]*1e-3f, 0.0f, 1.0f));
+	write_imagef(dest, (int2)(x,y), hsv2rgbA(oTemperature[x*resolution.y + y]*360e-3f, 1.f, oTemperature[x*resolution.y + y]*1e-3f, 1.f));
 	//write_imagef(dest, (int2)(x,y), (float4)(gradientField[x*resolution.y + y].x, gradientField[x*resolution.y + y].y, 0.0f, 1.0f));
-	//write_imagef(dest, (int2)(x,y), (float4)(div, -div, 0.0f, 1.0f));
+	//write_imagef(dest, (int2)(x,y), (float4)(div/1000.0, -div/1000.0, 0.0f, 1.0f));
 	//write_imagef(dest, (int2)(x,y), (float4)(1.0f*x/resolution.x, 1.0f*y/resolution.y, 0.0f, 1.0f));
 }
