@@ -82,10 +82,13 @@ if __name__ == "__main__":
     
     temperature_field_a = numpy.ndarray((width*height,1), dtype=numpy.float32)
     temperature_field_b = numpy.ndarray((width*height,1), dtype=numpy.float32)
-    temperature_gradient = numpy.ndarray((width*height,2), dtype=numpy.float32)
+    init_conductivity = numpy.ndarray((width*height,1), dtype=numpy.float32)
+    init_capacity = numpy.ndarray((width*height,1), dtype=numpy.float32)
     for x in xrange(ix):
         for y in xrange(iy):
             temperature_field_a[x*height + y] = temperature_field_b[x*height + y] = float(ord(image_data[x*(height*4) + y*4]))/255.0*1000.0
+            init_conductivity[x*height + y] = float(ord(image_data[x*(height*4) + y*4 + 1]))/255.0*1000.0 
+            init_capacity[x*height + y] = float(ord(image_data[x*(height*4) + y*4 + 2]))/255.0*4000.0 
     
     pygame.init()
     surface = pygame.display.set_mode(inital_texture.size, pygame.OPENGL|pygame.DOUBLEBUF, 16)
@@ -138,7 +141,8 @@ if __name__ == "__main__":
     queue = cl.CommandQueue(ctx)
     
     temperature_fields = cl.Buffer(ctx, cl.mem_flags.READ_WRITE | cl.mem_flags.COPY_HOST_PTR, hostbuf=temperature_field_a), cl.Buffer(ctx, cl.mem_flags.READ_WRITE | cl.mem_flags.COPY_HOST_PTR, hostbuf=temperature_field_b)
-    gradient_field = cl.Buffer(ctx, cl.mem_flags.READ_WRITE | cl.mem_flags.COPY_HOST_PTR, hostbuf=temperature_gradient)
+    conductivity_field = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=init_conductivity)
+    capacity_field = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=init_capacity)
     heat_tex_dev = cl.GLTexture(ctx, cl.mem_flags.WRITE_ONLY, GL_TEXTURE_2D, 0, status_texture, 2)
     queue.finish()
     
@@ -155,6 +159,7 @@ if __name__ == "__main__":
     n_shots = 0
     quit = False
     texture_a_is_target = True
+    
     try:
         while not quit:
             loop_start = time.clock()
@@ -169,7 +174,7 @@ if __name__ == "__main__":
             time_acquire.stop()
             
             time_heat.start()
-            prog.solve_heat_equation(queue, (width,height), None,  temperature_fields[0], temperature_fields[1], gradient_field, numpy.array((width,height),dtype=numpy.int32), heat_tex_dev)
+            prog.solve_heat_equation(queue, (width,height), None,  temperature_fields[0], temperature_fields[1], conductivity_field, capacity_field, heat_tex_dev)
             time_heat.stop()
             
             time_release.start()

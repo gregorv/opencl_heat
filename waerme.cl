@@ -1,9 +1,4 @@
 
-int get_idx(int x, int y, int2 res)
-{
-	return x*res.y + y;
-}
-
 float4 hsv2rgbA(float H, float S, float V, float a)
 {
 	int hi = (int)H/60.0f;
@@ -34,8 +29,12 @@ __kernel void calc_gradient(__global float* skalarField, __global float2* gradie
 	gradientField[x*res.y + y] = (float2)((dxp-dxm)/2.0f, (dyp-dym)/2.0f);
 }
 
-__kernel void solve_heat_equation(__global float* iTemperature, __global float* oTemperature, __global float2* gradientField, int2 resolution, __write_only image2d_t dest)
+__kernel void solve_heat_equation(__global float* iTemperature, __global float* oTemperature,
+                                  __global float* conductivity,
+                                  __global float* totalCapacity,
+                                  __write_only image2d_t dest)
 {
+	int2 resolution = (int2)(get_global_size(0), get_global_size(1));
 	int x = get_global_id(0);
 	int y = get_global_id(1);
 	int xp = x>=resolution.x-1? x : x+1;
@@ -47,17 +46,19 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 	float Typ = iTemperature[x * resolution.y + yp];
 	float Txm = iTemperature[xm * resolution.y + y];
 	float Tym = iTemperature[x * resolution.y + ym];
+	float K = totalCapacity[x * resolution.y + y];
+	float Kxp = totalCapacity[xp * resolution.y + y];
+	float Kyp = totalCapacity[x * resolution.y + yp];
+	float Kxm = totalCapacity[xm * resolution.y + y];
+	float Kym = totalCapacity[x * resolution.y + ym];
 	float d = 1e-2f;
-	float div = (Txp - 2.f*T + Txm + Typ - 2.f*T + Tym)/(d*d);
-	oTemperature[x*resolution.y + y] = iTemperature[x*resolution.y + y] + div*0.00001f;
+	float divGradT = (Txp - 2.f*T + Txm + Typ - 2.f*T + Tym)/(d*d);
+	float delTdelt = (((Kxp-Kxm)*(Txp-Txm) + (Kyp-Kym)*(Typ-Tym))/(d*d) + K*divGradT) / totalCapacity[x * resolution.y + y];
+	oTemperature[x*resolution.y + y] = iTemperature[x*resolution.y + y] + delTdelt*0.00001f;
 	if(oTemperature[x*resolution.y + y] < 0.0f)
 		oTemperature[x*resolution.y + y] = 0.0f;
 	//write_imagef(dest, (int2)(x,y), (float4)(oTemperature[x*resolution.y + y]*1e-3f, -oTemperature[x*resolution.y + y]*1e-3f, 0.0f, 1.0f));
 	write_imagef(dest, (int2)(x,y), hsv2rgbA((1.f - oTemperature[x*resolution.y + y]*1e-3f)*300.f, 1.f, 1.f, 1.f));
-	//write_imagef(dest, (int2)(x,y), hsv2rgbA(oTemperature[x*resolution.y + y]*360e-3f, 1.f, oTemperature[x*resolution.y + y]*1e-3f, 1.f));
-	//write_imagef(dest, (int2)(x,y), (float4)(gradientField[x*resolution.y + y].x, gradientField[x*resolution.y + y].y, 0.0f, 1.0f));
-	//write_imagef(dest, (int2)(x,y), (float4)(div/1000.0, -div/1000.0, 0.0f, 1.0f));
-	//write_imagef(dest, (int2)(x,y), (float4)(1.0f*x/resolution.x, 1.0f*y/resolution.y, 0.0f, 1.0f));
 
 /*	int x = get_global_id(0);
 	int y = get_global_id(1);
