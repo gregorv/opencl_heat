@@ -148,7 +148,6 @@ if __name__ == "__main__":
     time_total = Timer()
     time_acquire = Timer()
     time_release = Timer()
-    time_gradient = Timer()
     time_heat = Timer()
     time_finish = Timer()
     
@@ -163,9 +162,6 @@ if __name__ == "__main__":
                 quit = True
         
         time_total.start()
-        time_gradient.start()
-#        prog.calc_gradient(queue, (width,height), None,  temperature_fields[0], gradient_field, numpy.array((width,height),dtype=numpy.int32))
-        time_gradient.stop()
         
         time_acquire.start()
         cl.enqueue_acquire_gl_objects(queue, [heat_tex_dev])
@@ -193,8 +189,7 @@ if __name__ == "__main__":
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         
-        #glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, status_texture)
@@ -237,6 +232,5 @@ if __name__ == "__main__":
     print "Average time_total", time_total.average()*1e3
     print "Average time_acquire", time_acquire.average()*1e3
     print "Average time_release", time_release.average()*1e3
-    print "Average time_gradient", time_gradient.average()*1e3
     print "Average time_heat", time_heat.average()*1e3
     print "Average time_finish", time_finish.average()*1e3
