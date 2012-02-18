@@ -53,7 +53,7 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 	if(oTemperature[x*resolution.y + y] < 0.0f)
 		oTemperature[x*resolution.y + y] = 0.0f;
 	//write_imagef(dest, (int2)(x,y), (float4)(oTemperature[x*resolution.y + y]*1e-3f, -oTemperature[x*resolution.y + y]*1e-3f, 0.0f, 1.0f));
-	write_imagef(dest, (int2)(x,y), hsv2rgbA(360.0f - oTemperature[x*resolution.y + y]*360e-3f, 1.f, 1.f, 1.f));
+	write_imagef(dest, (int2)(x,y), hsv2rgbA((1.f - oTemperature[x*resolution.y + y]*1e-3f)*300.f, 1.f, 1.f, 1.f));
 	//write_imagef(dest, (int2)(x,y), hsv2rgbA(oTemperature[x*resolution.y + y]*360e-3f, 1.f, oTemperature[x*resolution.y + y]*1e-3f, 1.f));
 	//write_imagef(dest, (int2)(x,y), (float4)(gradientField[x*resolution.y + y].x, gradientField[x*resolution.y + y].y, 0.0f, 1.0f));
 	//write_imagef(dest, (int2)(x,y), (float4)(div/1000.0, -div/1000.0, 0.0f, 1.0f));
