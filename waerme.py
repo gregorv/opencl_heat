@@ -155,82 +155,84 @@ if __name__ == "__main__":
     n_shots = 0
     quit = False
     texture_a_is_target = True
-    while not quit:
-        loop_start = time.clock()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                quit = True
-        
-        time_total.start()
-        
-        time_acquire.start()
-        cl.enqueue_acquire_gl_objects(queue, [heat_tex_dev])
-        time_acquire.stop()
-        
-        time_heat.start()
-        prog.solve_heat_equation(queue, (width,height), None,  temperature_fields[0], temperature_fields[1], gradient_field, numpy.array((width,height),dtype=numpy.int32), heat_tex_dev)
-        time_heat.stop()
-        
-        time_release.start()
-        cl.enqueue_release_gl_objects(queue, [heat_tex_dev])
-        time_release.stop()
-        
-        time_finish.start()
-        queue.finish()
-        time_finish.stop()
-        time_total.stop()
-        temperature_fields = temperature_fields[1], temperature_fields[0]
-        
-                
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glViewport(0, 0, width, height)
-        glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D, status_texture)
-        if n_iter%100 == 0:
-            print "Take shot No.",n_shots
-            data = glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE)
-            img = Image.frombuffer("RGB", (width,height), data)
-            #img.save("opencl_waermeleitung_sequence_%02i.png" % n_shots)
-            n_shots += 1
-        
-        """
-        texcoord_vbo.bind()
-        glTexCoordPointer(2, GL_FLOAT, 0, texcoord_vbo)
-        geometry_vbo.bind()
-        glVertexPointer(2, GL_FLOAT, 0, geometry_vbo)
-        
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-        #draw the VBOs
-        glDrawArrays(GL_TRIANGLES, 0, 6)
+    try:
+        while not quit:
+            loop_start = time.clock()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit = True
+            
+            time_total.start()
+            
+            time_acquire.start()
+            cl.enqueue_acquire_gl_objects(queue, [heat_tex_dev])
+            time_acquire.stop()
+            
+            time_heat.start()
+            prog.solve_heat_equation(queue, (width,height), None,  temperature_fields[0], temperature_fields[1], gradient_field, numpy.array((width,height),dtype=numpy.int32), heat_tex_dev)
+            time_heat.stop()
+            
+            time_release.start()
+            cl.enqueue_release_gl_objects(queue, [heat_tex_dev])
+            time_release.stop()
+            
+            time_finish.start()
+            queue.finish()
+            time_finish.stop()
+            time_total.stop()
+            temperature_fields = temperature_fields[1], temperature_fields[0]
+            
+                    
+            glMatrixMode(GL_PROJECTION)
+            glLoadIdentity()
+            glViewport(0, 0, width, height)
+            glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0)
+            glMatrixMode(GL_MODELVIEW)
+            glLoadIdentity()
+            
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            
+            glEnable(GL_TEXTURE_2D)
+            glBindTexture(GL_TEXTURE_2D, status_texture)
+            if n_iter%100 == 0:
+                print "Take shot No.",n_shots
+                data = glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE)
+                img = Image.frombuffer("RGB", (width,height), data)
+                #img.save("opencl_waermeleitung_sequence_%02i.png" % n_shots)
+                n_shots += 1
+            
+            """
+            texcoord_vbo.bind()
+            glTexCoordPointer(2, GL_FLOAT, 0, texcoord_vbo)
+            geometry_vbo.bind()
+            glVertexPointer(2, GL_FLOAT, 0, geometry_vbo)
+            
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+            #draw the VBOs
+            glDrawArrays(GL_TRIANGLES, 0, 6)
 
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
-        """
-        
-        glBegin(GL_TRIANGLES)
-        glTexCoord2f(0.0, 0.0); glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 0.0); glVertex2f(1.0, 0.0)
-        glTexCoord2f(1.0, 1.0); glVertex2f(1.0, 1.0)
-        glTexCoord2f(0.0, 0.0); glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 1.0); glVertex2f(1.0, 1.0)
-        glTexCoord2f(0.0, 1.0); glVertex2f(0.0, 1.0)
-        glEnd()
-        
-        pygame.display.flip()
-        loop_time_list.append(time.clock() - loop_start)
-        n_iter += 1
-    
-    print "Average loop time [ms]", sum(loop_time_list)/len(loop_time_list)*1e3
-    print "Average time_total", time_total.average()*1e3
-    print "Average time_acquire", time_acquire.average()*1e3
-    print "Average time_release", time_release.average()*1e3
-    print "Average time_heat", time_heat.average()*1e3
-    print "Average time_finish", time_finish.average()*1e3
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            """
+            
+            glBegin(GL_TRIANGLES)
+            glTexCoord2f(0.0, 0.0); glVertex2f(0.0, 0.0)
+            glTexCoord2f(1.0, 0.0); glVertex2f(1.0, 0.0)
+            glTexCoord2f(1.0, 1.0); glVertex2f(1.0, 1.0)
+            glTexCoord2f(0.0, 0.0); glVertex2f(0.0, 0.0)
+            glTexCoord2f(1.0, 1.0); glVertex2f(1.0, 1.0)
+            glTexCoord2f(0.0, 1.0); glVertex2f(0.0, 1.0)
+            glEnd()
+            
+            pygame.display.flip()
+            loop_time_list.append(time.clock() - loop_start)
+            n_iter += 1
+    # try around while loop
+    finally:
+        print "Average loop time [ms]", sum(loop_time_list)/len(loop_time_list)*1e3
+        print "Average time_total", time_total.average()*1e3
+        print "Average time_acquire", time_acquire.average()*1e3
+        print "Average time_release", time_release.average()*1e3
+        print "Average time_heat", time_heat.average()*1e3
+        print "Average time_finish", time_finish.average()*1e3
