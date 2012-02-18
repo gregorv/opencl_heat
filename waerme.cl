@@ -53,8 +53,25 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 	if(oTemperature[x*resolution.y + y] < 0.0f)
 		oTemperature[x*resolution.y + y] = 0.0f;
 	//write_imagef(dest, (int2)(x,y), (float4)(oTemperature[x*resolution.y + y]*1e-3f, -oTemperature[x*resolution.y + y]*1e-3f, 0.0f, 1.0f));
-	write_imagef(dest, (int2)(x,y), hsv2rgbA(oTemperature[x*resolution.y + y]*360e-3f, 1.f, oTemperature[x*resolution.y + y]*1e-3f, 1.f));
+	write_imagef(dest, (int2)(x,y), hsv2rgbA(360.0f - oTemperature[x*resolution.y + y]*360e-3f, 1.f, 1.f, 1.f));
+	//write_imagef(dest, (int2)(x,y), hsv2rgbA(oTemperature[x*resolution.y + y]*360e-3f, 1.f, oTemperature[x*resolution.y + y]*1e-3f, 1.f));
 	//write_imagef(dest, (int2)(x,y), (float4)(gradientField[x*resolution.y + y].x, gradientField[x*resolution.y + y].y, 0.0f, 1.0f));
 	//write_imagef(dest, (int2)(x,y), (float4)(div/1000.0, -div/1000.0, 0.0f, 1.0f));
 	//write_imagef(dest, (int2)(x,y), (float4)(1.0f*x/resolution.x, 1.0f*y/resolution.y, 0.0f, 1.0f));
+
+/*	int x = get_global_id(0);
+	int y = get_global_id(1);
+	float2 C = (float2)((float)(x)/resolution.x, (float)(y)/resolution.y);
+	C.x = (C.x-0.7f)*2.f;
+	C.y = (C.y-0.5f)*2.f;
+	float2 Z = (float2)(0.0f, 0.0f);
+	int n=0;
+	int nmax=1000;
+	while(n<nmax)
+	{
+		Z = (float2)(Z.x*Z.x - Z.y*Z.y + C.x, 2.f*Z.x*Z.y + C.y);
+		if(Z.x*Z.x+Z.y*Z.y > 9.0f) break;
+		n += 1;
+	}
+	write_imagef(dest, (int2)(x,y), hsv2rgbA((float)(n)/nmax*360.0f, 1.f, n==nmax?0.f:1.f, 1.f));*/
 }

@@ -26,6 +26,7 @@ try:
     from PIL.Image import open as open_image
 except ImportError, err:
     from Image import open as open_image
+import Image
 
 if __name__ == "__main__":
     
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     time_heat = Timer()
     time_finish = Timer()
     
+    n_iter = 0
+    n_shots = 0
     quit = False
     texture_a_is_target = True
     while not quit:
@@ -157,6 +160,12 @@ if __name__ == "__main__":
         
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, status_texture)
+        if n_iter%100 == 0:
+            print "Take shot No.",n_shots
+            data = glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE)
+            img = Image.frombuffer("RGB", (width,height), data)
+            #img.save("opencl_waermeleitung_sequence_%02i.png" % n_shots)
+            n_shots += 1
         
         """
         texcoord_vbo.bind()
@@ -184,6 +193,8 @@ if __name__ == "__main__":
         
         pygame.display.flip()
         loop_time_list.append(time.clock() - loop_start)
+        n_iter += 1
+    
     print "Average loop time [ms]", sum(loop_time_list)/len(loop_time_list)*1e3
     print "Average time_total", time_total.average()*1e3
     print "Average time_acquire", time_acquire.average()*1e3
