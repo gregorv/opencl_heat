@@ -86,9 +86,9 @@ if __name__ == "__main__":
     init_capacity = numpy.ndarray((width*height,1), dtype=numpy.float32)
     for x in xrange(ix):
         for y in xrange(iy):
-            temperature_field_a[x*height + y] = temperature_field_b[x*height + y] = float(ord(image_data[x*(height*4) + y*4]))/255.0*1000.0
-            init_conductivity[x*height + y] = float(ord(image_data[x*(height*4) + y*4 + 1]))/255.0*1000.0 
-            init_capacity[x*height + y] = float(ord(image_data[x*(height*4) + y*4 + 2]))/255.0*4000.0 
+            temperature_field_a[x*height + y] = temperature_field_b[x*height + y] = float(ord(image_data[y*(width*4) + x*4]))/255.0*1000.0
+            init_conductivity[x*height + y] = float(ord(image_data[y*(width*4) + x*4 + 1]))/255.0*1000.0 
+            init_capacity[x*height + y] = float(ord(image_data[y*(width*4) + x*4 + 2]))/255.0*4000.0 
     
     pygame.init()
     surface = pygame.display.set_mode(inital_texture.size, pygame.OPENGL|pygame.DOUBLEBUF, 16)
