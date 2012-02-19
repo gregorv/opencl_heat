@@ -87,7 +87,7 @@ if __name__ == "__main__":
     for x in xrange(ix):
         for y in xrange(iy):
             temperature_field_a[x*height + y] = temperature_field_b[x*height + y] = float(ord(image_data[y*(width*4) + x*4]))/255.0*1000.0
-            init_conductivity[x*height + y] = float(ord(image_data[y*(width*4) + x*4 + 1]))/255.0*1000.0 
+            init_conductivity[x*height + y] = float(ord(image_data[y*(width*4) + x*4 + 1]))/255.0*500.0 
             init_capacity[x*height + y] = float(ord(image_data[y*(width*4) + x*4 + 2]))/255.0*4000.0 
     
     pygame.init()
@@ -199,11 +199,11 @@ if __name__ == "__main__":
             
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, status_texture)
-            if n_iter%100 == 0:
+            if n_iter%750 == 0:
                 print "Take shot No.",n_shots
                 data = glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE)
                 img = Image.frombuffer("RGB", (width,height), data)
-                #img.save("opencl_waermeleitung_sequence_%02i.png" % n_shots)
+                img.save("opencl_waermeleitung_sequence_%03i.png" % n_shots)
                 n_shots += 1
             
             """

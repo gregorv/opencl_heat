@@ -46,11 +46,11 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 	float Typ = iTemperature[x * resolution.y + yp];
 	float Txm = iTemperature[xm * resolution.y + y];
 	float Tym = iTemperature[x * resolution.y + ym];
-	float K = totalCapacity[x * resolution.y + y];
-	float Kxp = totalCapacity[xp * resolution.y + y];
-	float Kyp = totalCapacity[x * resolution.y + yp];
-	float Kxm = totalCapacity[xm * resolution.y + y];
-	float Kym = totalCapacity[x * resolution.y + ym];
+	float K = conductivity[x * resolution.y + y];
+	float Kxp = conductivity[xp * resolution.y + y];
+	float Kyp = conductivity[x * resolution.y + yp];
+	float Kxm = conductivity[xm * resolution.y + y];
+	float Kym = conductivity[x * resolution.y + ym];
 	float d = 1e-2f;
 	float divGradT = (Txp - 2.f*T + Txm + Typ - 2.f*T + Tym)/(d*d);
 	float delTdelt = (((Kxp-Kxm)*(Txp-Txm) + (Kyp-Kym)*(Typ-Tym))/(d*d) + K*divGradT) / totalCapacity[x * resolution.y + y];
@@ -59,6 +59,8 @@ __kernel void solve_heat_equation(__global float* iTemperature, __global float* 
 		oTemperature[x*resolution.y + y] = 0.0f;
 	//write_imagef(dest, (int2)(x,y), (float4)(oTemperature[x*resolution.y + y]*1e-3f, -oTemperature[x*resolution.y + y]*1e-3f, 0.0f, 1.0f));
 	write_imagef(dest, (int2)(x,y), hsv2rgbA((1.f - oTemperature[x*resolution.y + y]*1e-3f)*300.f, 1.f, 1.f, 1.f));
+	//write_imagef(dest, (int2)(x,y), (float4)(divGradT*1e-3f, -divGradT*1e-3f, 1.f, 1.f));
+	//write_imagef(dest, (int2)(x,y), (float4)(K*1e-3f, 0.f, 0.f, 1.f));
 
 /*	int x = get_global_id(0);
 	int y = get_global_id(1);
